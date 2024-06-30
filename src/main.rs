@@ -1,14 +1,11 @@
-use std::{
-    collections::HashMap, convert::Infallible, net::SocketAddr, str::FromStr, sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, convert::Infallible, net::SocketAddr, str::FromStr, sync::Arc};
 
 use hyper::{
     client::ResponseFuture,
     service::{make_service_fn, service_fn},
     Body, Client, Request, Response, Server, Uri,
 };
-use tokio::{sync::RwLock, time::sleep};
+use tokio::sync::RwLock;
 struct LoadBalancer {
     client: Client<hyper::client::HttpConnector>,
     worker_hosts: Vec<String>,
@@ -65,7 +62,6 @@ impl LoadBalancer {
         println!("{:?}", self.active_connections);
         self.add_active_connection(&current_worker);
         println!("{:?}", self.active_connections);
-        sleep(Duration::from_secs(10)).await;
         let response = self.client.request(new_req);
         self.remove_active_connection(&current_worker);
 
@@ -136,8 +132,8 @@ async fn handle(
 #[tokio::main]
 async fn main() {
     let worker_hosts = vec![
-        "http://localhost:3000".to_string(),
-        "http://localhost:3001".to_string(),
+        "http://localhost:60098".to_string(),
+        "http://localhost:60104".to_string(),
     ];
 
     let load_balancer = Arc::new(RwLock::new(
