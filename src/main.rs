@@ -29,7 +29,7 @@ impl LoadBalancer {
         })
     }
 
-    pub async fn forward_request(&mut self, req: Request<Body>) -> ResponseFuture {
+    pub async fn forward_request(&mut self, req: Request<Body>) -> (ResponseFuture, String) {
         let mut worker_uri = self.get_worker_least_connections().to_owned();
 
         let current_worker = worker_uri.clone();
@@ -63,9 +63,8 @@ impl LoadBalancer {
         self.add_active_connection(&current_worker);
         println!("{:?}", self.active_connections);
         let response = self.client.request(new_req);
-        self.remove_active_connection(&current_worker);
 
-        response
+        (response, current_worker)
     }
 
     fn get_worker(&mut self) -> &str {
@@ -123,13 +122,20 @@ async fn handle(
     req: Request<Body>,
     load_balancer: Arc<RwLock<LoadBalancer>>,
 ) -> Result<Response<Body>, hyper::Error> {
-    let result = {
+    let (request_future, worker) = {
         let mut load_balancer = load_balancer.write().await;
         load_balancer.forward_request(req).await
         // Lock is released at the end of this scope.
         // Don't hold the lock while waiting for the response!
     };
-    result.await
+    let result = request_future.await;
+
+    {
+        let mut load_balancer = load_balancer.write().await;
+        load_balancer.remove_active_connection(&worker);
+    }
+
+    result
 }
 
 #[tokio::main]
