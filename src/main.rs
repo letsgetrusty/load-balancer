@@ -123,17 +123,17 @@ async fn handle(
     req: Request<Body>,
     load_balancer: Arc<RwLock<LoadBalancer>>,
 ) -> Result<Response<Body>, hyper::Error> {
-    println!("Received request");
     let mut load_balancer = load_balancer.write().await;
-    println!("Acquired lock");
-    load_balancer.forward_request(req).await.await
+    let result = load_balancer.forward_request(req).await;
+    drop(load_balancer); // Don't hold the lock while waiting for the response!
+    result.await
 }
 
 #[tokio::main]
 async fn main() {
     let worker_hosts = vec![
-        "http://localhost:60098".to_string(),
-        "http://localhost:60104".to_string(),
+        "http://localhost:50336".to_string(),
+        "http://localhost:50342".to_string(),
     ];
 
     let load_balancer = Arc::new(RwLock::new(
