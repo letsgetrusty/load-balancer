@@ -123,9 +123,12 @@ async fn handle(
     req: Request<Body>,
     load_balancer: Arc<RwLock<LoadBalancer>>,
 ) -> Result<Response<Body>, hyper::Error> {
-    let mut load_balancer = load_balancer.write().await;
-    let result = load_balancer.forward_request(req).await;
-    drop(load_balancer); // Don't hold the lock while waiting for the response!
+    let result = {
+        let mut load_balancer = load_balancer.write().await;
+        load_balancer.forward_request(req).await
+        // Lock is released at the end of this scope.
+        // Don't hold the lock while waiting for the response!
+    };
     result.await
 }
 
