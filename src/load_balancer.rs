@@ -1,24 +1,28 @@
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 
-use hyper::{client::ResponseFuture, Body, Client, Request, Uri};
+use hyper::{Body, Client, Request, Uri};
+use tokio::sync::RwLock;
 
 use crate::strategies::LBStrategy;
 
 pub struct LoadBalancer {
     client: Client<hyper::client::HttpConnector>,
-    strategy: Box<dyn LBStrategy + Send + Sync>,
+    strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>,
 }
 
 impl LoadBalancer {
-    pub fn new(strategy: Box<dyn LBStrategy + Send + Sync>) -> Self {
+    pub fn new(strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>) -> Self {
         LoadBalancer {
             client: Client::new(),
             strategy,
         }
     }
 
-    pub async fn forward_request(&mut self, req: Request<Body>) -> (ResponseFuture, String) {
-        let mut worker_uri = self.strategy.get_next_worker().to_owned();
+    pub async fn forward_request(
+        &self,
+        req: Request<Body>,
+    ) -> Result<hyper::Response<Body>, hyper::Error> {
+        let mut worker_uri = { self.strategy.write().await.get_next_worker().to_owned() };
 
         let current_worker = worker_uri.clone();
 
@@ -45,16 +49,22 @@ impl LoadBalancer {
             new_req.headers_mut().insert(key, value.clone());
         }
 
-        let response = self.client.request(new_req);
+        {
+            self.strategy
+                .write()
+                .await
+                .on_request_start(&current_worker)
+        }
 
-        (response, current_worker)
-    }
+        let response = self.client.request(new_req).await;
 
-    pub fn on_request_start(&mut self, worker: &str) {
-        self.strategy.on_request_start(worker);
-    }
+        {
+            self.strategy
+                .write()
+                .await
+                .on_request_complete(&current_worker)
+        }
 
-    pub fn on_request_complete(&mut self, worker: &str) {
-        self.strategy.on_request_complete(worker);
+        response
     }
 }

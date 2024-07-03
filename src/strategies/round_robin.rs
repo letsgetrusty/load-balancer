@@ -21,11 +21,11 @@ impl LBStrategy for RoundRobin {
         worker
     }
 
-    fn on_request_start(&mut self, worker: &str) {
+    fn on_request_start(&mut self, _: &str) {
         // no-op
     }
 
-    fn on_request_complete(&mut self, worker: &str) {
+    fn on_request_complete(&mut self, _: &str) {
         // no-op
     }
 }
