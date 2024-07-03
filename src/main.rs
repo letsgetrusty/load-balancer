@@ -4,12 +4,8 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Response, Server,
 };
-use load_balancer::LoadBalancer;
-use strategies::LeastConnections;
+use load_balancer::{LeastConnections, LoadBalancer};
 use tokio::sync::RwLock;
-
-mod load_balancer;
-mod strategies;
 
 async fn handle(
     req: Request<Body>,
