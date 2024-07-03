@@ -49,4 +49,12 @@ impl LoadBalancer {
 
         (response, current_worker)
     }
+
+    pub fn on_request_start(&mut self, worker: &str) {
+        self.strategy.on_request_start(worker);
+    }
+
+    pub fn on_request_complete(&mut self, worker: &str) {
+        self.strategy.on_request_complete(worker);
+    }
 }

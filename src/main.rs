@@ -5,7 +5,7 @@ use hyper::{
     Body, Request, Response, Server,
 };
 use load_balancer::LoadBalancer;
-use strategies::RoundRobin;
+use strategies::{LeastConnections, RoundRobin};
 use tokio::sync::RwLock;
 
 mod load_balancer;
@@ -15,13 +15,20 @@ async fn handle(
     req: Request<Body>,
     load_balancer: Arc<RwLock<LoadBalancer>>,
 ) -> Result<Response<Body>, hyper::Error> {
-    let (request_future, _) = {
+    let (request_future, worker) = {
         let mut load_balancer = load_balancer.write().await;
-        load_balancer.forward_request(req).await
+        let result = load_balancer.forward_request(req).await;
+        load_balancer.on_request_start(&result.1);
+        result
         // Lock is released at the end of this scope.
         // Don't hold the lock while waiting for the response!
     };
     let result = request_future.await;
+
+    {
+        let mut load_balancer = load_balancer.write().await;
+        load_balancer.on_request_complete(&worker);
+    }
 
     result
 }
@@ -33,7 +40,7 @@ async fn main() {
         "http://localhost:50342".to_string(),
     ];
 
-    let strategy = Box::new(RoundRobin::new(worker_hosts.clone()));
+    let strategy = Box::new(LeastConnections::new(worker_hosts.clone()));
 
     let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(strategy)));
 

@@ -31,6 +31,8 @@ impl LeastConnections {
     }
 
     pub fn remove_active_connection(&mut self, worker: &str) {
+        println!("----------REMOVE CONNECTION BEFORE------------");
+        println!("{:?}", self.active_connections);
         // Decrement the active connection count for the worker
         if let Some(count) = self.active_connections.get_mut(worker) {
             *count -= 1;
@@ -38,6 +40,8 @@ impl LeastConnections {
                 self.active_connections.remove(worker);
             }
         }
+        println!("----------REMOVE CONNECTION AFTER------------");
+        println!("{:?}", self.active_connections);
     }
 }
 
@@ -58,5 +62,13 @@ impl LBStrategy for LeastConnections {
         }
 
         selected_worker
+    }
+
+    fn on_request_start(&mut self, worker: &str) {
+        self.add_active_connection(worker);
+    }
+
+    fn on_request_complete(&mut self, worker: &str) {
+        self.remove_active_connection(worker);
     }
 }

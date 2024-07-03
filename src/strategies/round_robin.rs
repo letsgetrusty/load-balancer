@@ -20,4 +20,12 @@ impl LBStrategy for RoundRobin {
         self.current_worker = (self.current_worker + 1) % self.worker_hosts.len();
         worker
     }
+
+    fn on_request_start(&mut self, worker: &str) {
+        // no-op
+    }
+
+    fn on_request_complete(&mut self, worker: &str) {
+        // no-op
+    }
 }
