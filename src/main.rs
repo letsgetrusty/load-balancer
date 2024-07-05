@@ -1,18 +1,6 @@
-use std::{convert::Infallible, net::SocketAddr, sync::Arc};
-
-use hyper::{
-    service::{make_service_fn, service_fn},
-    Body, Request, Response, Server,
-};
-use load_balancer::{LeastConnections, LoadBalancer};
+use load_balancer::{run_server, LeastConnections, LoadBalancer};
+use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
-
-async fn handle(
-    req: Request<Body>,
-    load_balancer: Arc<LoadBalancer>,
-) -> Result<Response<Body>, hyper::Error> {
-    load_balancer.forward_request(req).await
-}
 
 #[tokio::main]
 async fn main() {
@@ -27,12 +15,7 @@ async fn main() {
 
     let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 1337));
 
-    let server = Server::bind(&addr).serve(make_service_fn(move |_conn| {
-        let load_balancer = load_balancer.clone();
-        async move { Ok::<_, Infallible>(service_fn(move |req| handle(req, load_balancer.clone()))) }
-    }));
-
-    if let Err(e) = server.await {
+    if let Err(e) = run_server(addr, load_balancer).await {
         println!("error: {}", e);
     }
 }
