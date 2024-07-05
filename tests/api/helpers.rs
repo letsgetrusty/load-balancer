@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use load_balancer::{run_server, LoadBalancer, RoundRobin};
+use load_balancer::{run_server, LBStrategy, LeastConnections, LoadBalancer, RoundRobin};
 use tokio::{sync::RwLock, time::sleep};
 use wiremock::MockServer;
 
@@ -11,19 +11,55 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    pub async fn new() -> Self {
-        let workers = vec![
-            MockServer::start().await,
-            MockServer::start().await,
-            MockServer::start().await,
-            MockServer::start().await,
-        ];
+    #[allow(clippy::new_ret_no_self)]
+    pub async fn new(number_of_workers: i8) -> TestAppBuilder {
+        let mut workers = vec![];
 
-        let worker_hosts = workers.iter().map(|w| w.uri()).collect::<Vec<_>>();
+        for _ in 0..number_of_workers {
+            workers.push(MockServer::start().await);
+        }
 
+        TestAppBuilder::new(workers)
+    }
+
+    pub async fn post_work(&self) -> reqwest::Response {
+        self.http_client
+            .post(&format!("{}/work", self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+}
+
+pub struct TestAppBuilder {
+    workers: Vec<MockServer>,
+    strategy: Option<Arc<RwLock<dyn LBStrategy + Send + Sync>>>,
+}
+
+impl TestAppBuilder {
+    fn new(workers: Vec<MockServer>) -> Self {
+        Self {
+            workers,
+            strategy: None,
+        }
+    }
+
+    pub fn set_round_robin_strategy(mut self) -> Self {
+        let worker_hosts = self.workers.iter().map(|w| w.uri()).collect::<Vec<_>>();
         let strategy = RoundRobin::new(worker_hosts);
+        self.strategy = Some(Arc::new(RwLock::new(strategy)));
+        self
+    }
 
-        let load_balancer = Arc::new(LoadBalancer::new(Arc::new(RwLock::new(strategy))));
+    pub fn set_least_connections_strategy(mut self) -> Self {
+        let worker_hosts = self.workers.iter().map(|w| w.uri()).collect::<Vec<_>>();
+        let strategy = LeastConnections::new(worker_hosts);
+        self.strategy = Some(Arc::new(RwLock::new(strategy)));
+        self
+    }
+
+    pub async fn build(self) -> TestApp {
+        let load_balancer = Arc::new(LoadBalancer::new(self.strategy.unwrap()));
 
         let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 1337));
 
@@ -37,18 +73,10 @@ impl TestApp {
 
         let http_client = reqwest::Client::new();
 
-        Self {
-            workers,
+        TestApp {
+            workers: self.workers,
             address,
             http_client,
         }
-    }
-
-    pub async fn post_work(&self) -> reqwest::Response {
-        self.http_client
-            .post(&format!("{}/work", self.address))
-            .send()
-            .await
-            .expect("Failed to execute request.")
     }
 }

@@ -7,5 +7,23 @@ use crate::helpers::TestApp;
 
 #[tokio::test]
 async fn test_least_connections() {
-    // TODO: Implement the test for the LeastConnections strategy
+    // TODO: Fix test
+    let app = TestApp::new(4)
+        .await
+        .set_least_connections_strategy()
+        .build()
+        .await;
+
+    for worker in app.workers.iter() {
+        Mock::given(path("/work"))
+            .and(method("POST"))
+            .respond_with(ResponseTemplate::new(200))
+            .expect(1)
+            .mount(worker)
+            .await;
+    }
+
+    for _ in app.workers.iter() {
+        app.post_work().await;
+    }
 }
