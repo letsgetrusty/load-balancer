@@ -28,4 +28,8 @@ impl LBStrategy for RoundRobin {
     fn on_request_complete(&mut self, _: &str) {
         // no-op
     }
+
+    fn get_worker_hosts(&self) -> Vec<String> {
+        self.worker_hosts.clone()
+    }
 }

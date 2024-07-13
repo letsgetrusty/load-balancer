@@ -67,4 +67,8 @@ impl LBStrategy for LeastConnections {
     fn on_request_complete(&mut self, worker: &str) {
         self.remove_active_connection(worker);
     }
+
+    fn get_worker_hosts(&self) -> Vec<String> {
+        self.worker_hosts.clone()
+    }
 }

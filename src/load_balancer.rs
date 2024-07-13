@@ -71,4 +71,12 @@ impl LoadBalancer {
 
         response
     }
+
+    pub async fn get_worker_hosts(&self) -> Vec<String> {
+        self.strategy.read().await.get_worker_hosts()
+    }
+
+    pub fn set_strategy(&mut self, strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>) {
+        self.strategy = strategy;
+    }
 }

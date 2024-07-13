@@ -29,6 +29,15 @@ impl TestApp {
             .await
             .expect("Failed to execute request.")
     }
+
+    pub async fn post_strategy(&self, strategy: &str) -> reqwest::Response {
+        self.http_client
+            .post(&format!("{}/strategy", self.address))
+            .body(strategy.to_string())
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
 }
 
 pub struct TestAppBuilder {
@@ -59,7 +68,7 @@ impl TestAppBuilder {
     }
 
     pub async fn build(self) -> TestApp {
-        let load_balancer = Arc::new(LoadBalancer::new(self.strategy.unwrap()));
+        let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(self.strategy.unwrap())));
 
         let addr = std::net::TcpListener::bind("127.0.0.1:0")
             .expect("Failed to bind to port 0")
