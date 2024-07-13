@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::sync::Arc;
 
 use load_balancer::{run_server, LBStrategy, LeastConnections, LoadBalancer, RoundRobin};
 use tokio::{sync::RwLock, time::sleep};
@@ -61,13 +61,16 @@ impl TestAppBuilder {
     pub async fn build(self) -> TestApp {
         let load_balancer = Arc::new(LoadBalancer::new(self.strategy.unwrap()));
 
-        let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 1337));
+        let addr = std::net::TcpListener::bind("127.0.0.1:0")
+            .expect("Failed to bind to port 0")
+            .local_addr()
+            .unwrap();
 
         #[allow(clippy::let_underscore_future)]
         let _ = tokio::spawn(run_server(addr, load_balancer));
 
         // HACK: make sure the server is running before we start testing
-        sleep(std::time::Duration::from_secs(1)).await;
+        sleep(std::time::Duration::from_millis(200)).await;
 
         let address = format!("http://{}", addr);
 

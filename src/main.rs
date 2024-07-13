@@ -5,8 +5,8 @@ use tokio::sync::RwLock;
 #[tokio::main]
 async fn main() {
     let worker_hosts = vec![
-        "http://localhost:50336".to_string(),
-        "http://localhost:50342".to_string(),
+        "http://localhost:62258".to_string(),
+        "http://localhost:62260".to_string(),
     ];
 
     let strategy = LeastConnections::new(worker_hosts.clone());

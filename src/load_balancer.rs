@@ -26,6 +26,8 @@ impl LoadBalancer {
 
         let current_worker = worker_uri.clone();
 
+        println!("Forwarding request to: {}", worker_uri);
+
         // Extract the path and query from the original request
         if let Some(path_and_query) = req.uri().path_and_query() {
             worker_uri.push_str(path_and_query.as_str());
@@ -64,6 +66,8 @@ impl LoadBalancer {
                 .await
                 .on_request_complete(&current_worker)
         }
+
+        println!("Response from {}: {:?}", current_worker, response);
 
         response
     }
