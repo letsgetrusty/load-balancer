@@ -12,19 +12,23 @@ async fn test_switching_strategies() {
     let app = Arc::new(
         TestApp::new(3)
             .await
-            .set_least_connections_strategy()
+            .set_round_robin_strategy()
             .build()
             .await,
     );
 
     {
+        let mut guards = Vec::new();
+
         for worker in app.workers.iter() {
-            Mock::given(path("/work"))
+            let mock_guard = Mock::given(path("/work"))
                 .and(method("POST"))
                 .respond_with(ResponseTemplate::new(200))
                 .expect(1)
-                .mount(worker)
+                .mount_as_scoped(worker)
                 .await;
+
+            guards.push(mock_guard);
         }
 
         for _ in app.workers.iter() {
