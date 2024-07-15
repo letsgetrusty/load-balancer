@@ -5,10 +5,12 @@ use hyper::{
 use std::{convert::Infallible, sync::Arc};
 use tokio::sync::RwLock;
 
+mod decision_engine;
 mod load_balancer;
 mod metrics;
 mod strategies;
 
+pub use decision_engine::*;
 pub use load_balancer::*;
 pub use metrics::*;
 pub use strategies::*;
