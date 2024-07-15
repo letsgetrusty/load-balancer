@@ -60,6 +60,8 @@ impl LoadBalancer {
 
         let response = self.client.request(new_req).await;
 
+        println!("Response from {}: {:?}", current_worker, response);
+
         {
             self.strategy
                 .write()

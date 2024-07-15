@@ -1,4 +1,5 @@
 mod load_balancer;
+mod metrics;
 mod strategies;
 
 use std::{convert::Infallible, sync::Arc};
