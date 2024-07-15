@@ -3,17 +3,22 @@ use std::{str::FromStr, sync::Arc};
 use hyper::{Body, Client, Request, Uri};
 use tokio::sync::RwLock;
 
-use crate::strategies::LBStrategy;
+use crate::{metrics::MetricsClient, strategies::LBStrategy};
 
 pub struct LoadBalancer {
     client: Client<hyper::client::HttpConnector>,
+    metrics_client: MetricsClient,
     strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>,
 }
 
 impl LoadBalancer {
-    pub fn new(strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>) -> Self {
+    pub fn new(
+        strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>,
+        metrics_client: MetricsClient,
+    ) -> Self {
         LoadBalancer {
             client: Client::new(),
+            metrics_client,
             strategy,
         }
     }

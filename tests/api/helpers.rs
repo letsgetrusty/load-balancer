@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use load_balancer::{run_server, LBStrategy, LeastConnections, LoadBalancer, RoundRobin};
+use load_balancer::{
+    run_server, LBStrategy, LeastConnections, LoadBalancer, MetricsClient, RoundRobin,
+};
 use tokio::{sync::RwLock, time::sleep};
 use wiremock::MockServer;
 
@@ -68,7 +70,11 @@ impl TestAppBuilder {
     }
 
     pub async fn build(self) -> TestApp {
-        let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(self.strategy.unwrap())));
+        let metrics_client = MetricsClient::new();
+        let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(
+            self.strategy.unwrap(),
+            metrics_client,
+        )));
 
         let addr = std::net::TcpListener::bind("127.0.0.1:0")
             .expect("Failed to bind to port 0")

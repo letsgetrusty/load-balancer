@@ -10,13 +10,13 @@ use super::Metrics;
 
 const MAX_STORED_REQUESTS: usize = 1000; // Store data for the last 1000 requests
 
-struct MetricsClient {
+pub struct MetricsClient {
     inner: Client<HttpConnector>,
     metrics: Arc<Mutex<Metrics>>,
 }
 
 impl MetricsClient {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let client = Client::new();
         MetricsClient {
             inner: client,
@@ -24,7 +24,7 @@ impl MetricsClient {
         }
     }
 
-    async fn request(&self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    pub async fn request(&self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
         let start = Instant::now();
         let method = req.method().clone();
         let uri = req.uri().clone();
@@ -71,11 +71,11 @@ impl MetricsClient {
         result
     }
 
-    async fn get_metrics(&self) -> Metrics {
+    pub async fn get_metrics(&self) -> Metrics {
         (*self.metrics.lock().await).clone()
     }
 
-    async fn print_metrics(&self) {
+    pub async fn print_metrics(&self) {
         let metrics = self.get_metrics().await;
         println!("Total requests: {}", metrics.total_requests);
         println!(
@@ -92,7 +92,7 @@ impl MetricsClient {
         println!("Recent requests: {}", metrics.recent_requests.len());
     }
 
-    async fn get_recent_requests(&self) -> Vec<TrackedRequest> {
+    pub async fn get_recent_requests(&self) -> Vec<TrackedRequest> {
         self.metrics
             .lock()
             .await

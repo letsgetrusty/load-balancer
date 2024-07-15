@@ -1,16 +1,18 @@
-mod load_balancer;
-mod metrics;
-mod strategies;
-
-use std::{convert::Infallible, sync::Arc};
-
 use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Response, Server,
 };
-pub use load_balancer::*;
-pub use strategies::*;
+use std::{convert::Infallible, sync::Arc};
 use tokio::sync::RwLock;
+
+mod load_balancer;
+mod metrics;
+mod strategies;
+
+pub use load_balancer::*;
+pub use metrics::*;
+pub use strategies::*;
+
 async fn handle(
     req: Request<Body>,
     load_balancer: Arc<RwLock<LoadBalancer>>,
