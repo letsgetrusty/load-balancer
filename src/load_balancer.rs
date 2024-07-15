@@ -63,7 +63,8 @@ impl LoadBalancer {
                 .on_request_start(&current_worker)
         }
 
-        let response = self.client.request(new_req).await;
+        // let response = self.client.request(new_req).await; // TODO: remove this line
+        let response = self.metrics_client.request(new_req).await;
 
         println!("Response from {}: {:?}", current_worker, response);
 
