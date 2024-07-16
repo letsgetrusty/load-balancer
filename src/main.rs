@@ -1,19 +1,15 @@
-use load_balancer::{
-    run_server, DecisionEngine, LeastConnectionsStrategy, LoadBalancer, MetricsClient,
-};
+use load_balancer::{run_server, DecisionEngine, LoadBalancer, MetricsClient, RoundRobinStrategy};
 use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
 
 #[tokio::main]
 async fn main() {
     let worker_hosts = vec![
-        "http://localhost:62258".to_string(),
-        "http://localhost:62260".to_string(),
+        "http://localhost:49961".to_string(),
+        "http://localhost:49962".to_string(),
     ];
 
-    let strategy = Arc::new(RwLock::new(LeastConnectionsStrategy::new(
-        worker_hosts.clone(),
-    )));
+    let strategy = Arc::new(RwLock::new(RoundRobinStrategy::new(worker_hosts.clone())));
     let metrics_client = Arc::new(MetricsClient::new());
     let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(
         strategy,

@@ -27,16 +27,18 @@ impl DecisionEngine {
 
         tokio::spawn(async move {
             loop {
-                if metrics_client.get_metrics().await.total_requests > 1 {
-                    let mut lb = load_balancer.write().await;
+                println!("Decision Engine: Checking metrics");
+                if metrics_client.get_metrics().await.total_requests > 5 {
+                    println!("Decision Engine: Changing strategy to FirstWorkerStrategy");
+                    let mut lb: tokio::sync::RwLockWriteGuard<LoadBalancer> =
+                        load_balancer.write().await;
                     let strategy = Arc::new(RwLock::new(FirstWorkerStrategy::new(
-                        load_balancer.read().await.get_worker_hosts().await,
+                        lb.get_worker_hosts().await,
                     )));
                     lb.set_strategy(strategy);
                 }
 
-                // Sleep for 60 seconds
-                sleep(Duration::from_secs(60)).await;
+                sleep(Duration::from_secs(10)).await;
             }
         });
     }
