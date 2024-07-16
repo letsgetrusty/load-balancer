@@ -21,6 +21,7 @@ async fn main() {
     )));
 
     let decision_engine = DecisionEngine::new(Arc::clone(&load_balancer), metrics_client);
+    decision_engine.start();
 
     let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 1337));
 
