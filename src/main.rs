@@ -1,4 +1,6 @@
-use load_balancer::{run_server, LeastConnections, LoadBalancer, MetricsClient};
+use load_balancer::{
+    run_server, DecisionEngine, LeastConnectionsStrategy, LoadBalancer, MetricsClient,
+};
 use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
 
@@ -9,10 +11,16 @@ async fn main() {
         "http://localhost:62260".to_string(),
     ];
 
-    let strategy = Arc::new(RwLock::new(LeastConnections::new(worker_hosts.clone())));
-    let metrics_client = MetricsClient::new();
+    let strategy = Arc::new(RwLock::new(LeastConnectionsStrategy::new(
+        worker_hosts.clone(),
+    )));
+    let metrics_client = Arc::new(MetricsClient::new());
+    let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(
+        strategy,
+        metrics_client.clone(),
+    )));
 
-    let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(strategy, metrics_client)));
+    let decision_engine = DecisionEngine::new(Arc::clone(&load_balancer), metrics_client);
 
     let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 1337));
 

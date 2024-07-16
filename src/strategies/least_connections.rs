@@ -2,14 +2,14 @@ use std::collections::HashMap;
 
 use super::strategy::LBStrategy;
 
-pub struct LeastConnections {
+pub struct LeastConnectionsStrategy {
     worker_hosts: Vec<String>,
     active_connections: HashMap<String, usize>,
 }
 
-impl LeastConnections {
+impl LeastConnectionsStrategy {
     pub fn new(worker_hosts: Vec<String>) -> Self {
-        LeastConnections {
+        Self {
             worker_hosts,
             active_connections: HashMap::new(),
         }
@@ -41,7 +41,7 @@ impl LeastConnections {
     }
 }
 
-impl LBStrategy for LeastConnections {
+impl LBStrategy for LeastConnectionsStrategy {
     fn get_next_worker(&mut self) -> &str {
         let mut min_connections = usize::MAX;
         let mut selected_worker = "";

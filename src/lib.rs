@@ -23,10 +23,10 @@ async fn handle(
         let body = hyper::body::to_bytes(req.into_body()).await?;
         let strategy_name = String::from_utf8_lossy(&body).to_string();
         let strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>> = match strategy_name.as_str() {
-            "round_robin" => Arc::new(RwLock::new(RoundRobin::new(
+            "round_robin" => Arc::new(RwLock::new(RoundRobinStrategy::new(
                 load_balancer.read().await.get_worker_hosts().await,
             ))),
-            "least_connections" => Arc::new(RwLock::new(LeastConnections::new(
+            "least_connections" => Arc::new(RwLock::new(LeastConnectionsStrategy::new(
                 load_balancer.read().await.get_worker_hosts().await,
             ))),
             _ => {

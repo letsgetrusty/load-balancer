@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
-use crate::{LoadBalancer, MetricsClient};
+use crate::{LeastConnectionsStrategy, LoadBalancer, MetricsClient};
 use tokio::time::{sleep, Duration};
 
-struct DecisionEngine {
+pub struct DecisionEngine {
     load_balancer: Arc<RwLock<LoadBalancer>>,
     metrics_client: Arc<MetricsClient>,
 }
@@ -27,8 +27,13 @@ impl DecisionEngine {
 
         tokio::spawn(async move {
             loop {
-                // Decide if the load balancing algorithm should change
-                // ...
+                if metrics_client.get_metrics().await.total_requests > 100 {
+                    let mut lb = load_balancer.write().await;
+                    let strategy = Arc::new(RwLock::new(LeastConnectionsStrategy::new(
+                        load_balancer.read().await.get_worker_hosts().await,
+                    )));
+                    lb.set_strategy(strategy);
+                }
 
                 // Sleep for 60 seconds
                 sleep(Duration::from_secs(60)).await;

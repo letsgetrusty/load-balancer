@@ -629,6 +629,7 @@ name = "load_balancer"
 version = "0.1.0"
 dependencies = [
  "hyper 0.14.29",
+ "rand",
  "reqwest",
  "tokio",
  "tower",

@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use load_balancer::{
-    run_server, LBStrategy, LeastConnections, LoadBalancer, MetricsClient, RoundRobin,
+    run_server, LBStrategy, LeastConnectionsStrategy, LoadBalancer, MetricsClient,
+    RoundRobinStrategy,
 };
 use tokio::{sync::RwLock, time::sleep};
 use wiremock::MockServer;
@@ -57,20 +58,20 @@ impl TestAppBuilder {
 
     pub fn set_round_robin_strategy(mut self) -> Self {
         let worker_hosts = self.workers.iter().map(|w| w.uri()).collect::<Vec<_>>();
-        let strategy = RoundRobin::new(worker_hosts);
+        let strategy = RoundRobinStrategy::new(worker_hosts);
         self.strategy = Some(Arc::new(RwLock::new(strategy)));
         self
     }
 
     pub fn set_least_connections_strategy(mut self) -> Self {
         let worker_hosts = self.workers.iter().map(|w| w.uri()).collect::<Vec<_>>();
-        let strategy = LeastConnections::new(worker_hosts);
+        let strategy = LeastConnectionsStrategy::new(worker_hosts);
         self.strategy = Some(Arc::new(RwLock::new(strategy)));
         self
     }
 
     pub async fn build(self) -> TestApp {
-        let metrics_client = MetricsClient::new();
+        let metrics_client = Arc::new(MetricsClient::new());
         let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(
             self.strategy.unwrap(),
             metrics_client,

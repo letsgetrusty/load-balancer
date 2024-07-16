@@ -7,14 +7,14 @@ use crate::{metrics::MetricsClient, strategies::LBStrategy};
 
 pub struct LoadBalancer {
     client: Client<hyper::client::HttpConnector>,
-    metrics_client: MetricsClient,
+    metrics_client: Arc<MetricsClient>,
     strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>,
 }
 
 impl LoadBalancer {
     pub fn new(
         strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>,
-        metrics_client: MetricsClient,
+        metrics_client: Arc<MetricsClient>,
     ) -> Self {
         LoadBalancer {
             client: Client::new(),
