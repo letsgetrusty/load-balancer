@@ -1,0 +1,16 @@
+[package]
+name = "load_balancer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hyper = { version = "0.14.25", features = ["full"] }
+tokio = { version = "1.26.0", features = ["full"] }
+tower = { version = "0.4", features = ["full"] }
+rand = "0.8.5"
+
+[dev-dependencies]
+wiremock = "0.6.0"
+reqwest = "0.12.5"
