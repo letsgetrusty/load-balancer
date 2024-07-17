@@ -30,8 +30,7 @@ impl DecisionEngine {
                 println!("Decision Engine: Checking metrics");
                 if metrics_client.get_metrics().await.total_requests > 5 {
                     println!("Decision Engine: Changing strategy to FirstWorkerStrategy");
-                    let mut lb: tokio::sync::RwLockWriteGuard<LoadBalancer> =
-                        load_balancer.write().await;
+                    let mut lb = load_balancer.write().await;
                     let strategy = Arc::new(RwLock::new(FirstWorkerStrategy::new(
                         lb.get_worker_hosts().await,
                     )));
