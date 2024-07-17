@@ -10,6 +10,7 @@ use super::Metrics;
 
 const MAX_STORED_REQUESTS: usize = 1000; // Store data for the last 1000 requests
 
+#[derive(Default)]
 pub struct MetricsClient {
     inner: Client<HttpConnector>,
     metrics: Arc<Mutex<Metrics>>,
@@ -17,11 +18,7 @@ pub struct MetricsClient {
 
 impl MetricsClient {
     pub fn new() -> Self {
-        let client = Client::new();
-        MetricsClient {
-            inner: client,
-            metrics: Arc::new(Mutex::new(Metrics::default())),
-        }
+        MetricsClient::default()
     }
 
     pub async fn request(&self, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {

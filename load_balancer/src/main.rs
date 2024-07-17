@@ -25,5 +25,3 @@ async fn main() {
         println!("error: {}", e);
     }
 }
-
-// TODO: create a virtual workspace and move the worker server into it: https://chatgpt.com/c/a8a0b556-694c-4acd-8a01-2919c33c5a15

@@ -1,12 +1,11 @@
 use std::{str::FromStr, sync::Arc};
 
-use hyper::{Body, Client, Request, Uri};
+use hyper::{Body, Request, Uri};
 use tokio::sync::RwLock;
 
 use crate::{metrics::MetricsClient, strategies::LBStrategy};
 
 pub struct LoadBalancer {
-    client: Client<hyper::client::HttpConnector>,
     metrics_client: Arc<MetricsClient>,
     strategy: Arc<RwLock<dyn LBStrategy + Send + Sync>>,
 }
@@ -17,7 +16,6 @@ impl LoadBalancer {
         metrics_client: Arc<MetricsClient>,
     ) -> Self {
         LoadBalancer {
-            client: Client::new(),
             metrics_client,
             strategy,
         }
@@ -63,7 +61,6 @@ impl LoadBalancer {
                 .on_request_start(&current_worker)
         }
 
-        // let response = self.client.request(new_req).await; // TODO: remove this line
         let response = self.metrics_client.request(new_req).await;
 
         println!("Response from {}: {:?}", current_worker, response);

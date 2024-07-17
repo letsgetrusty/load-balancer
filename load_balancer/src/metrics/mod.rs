@@ -1,3 +1,4 @@
+#[allow(clippy::module_inception)]
 mod metrics;
 mod metrics_client;
 mod tracked_request;
