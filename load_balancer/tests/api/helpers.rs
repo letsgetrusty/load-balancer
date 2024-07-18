@@ -11,6 +11,8 @@ pub struct TestApp {
     pub workers: Vec<MockServer>,
     pub address: String,
     pub http_client: reqwest::Client,
+    pub metrics_client: Arc<MetricsClient>,
+    pub load_balancer: Arc<RwLock<LoadBalancer>>,
 }
 
 impl TestApp {
@@ -74,7 +76,7 @@ impl TestAppBuilder {
         let metrics_client = Arc::new(MetricsClient::new());
         let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(
             self.strategy.unwrap(),
-            metrics_client,
+            metrics_client.clone(),
         )));
 
         let addr = std::net::TcpListener::bind("127.0.0.1:0")
@@ -83,7 +85,7 @@ impl TestAppBuilder {
             .unwrap();
 
         #[allow(clippy::let_underscore_future)]
-        let _ = tokio::spawn(run_server(addr, load_balancer));
+        let _ = tokio::spawn(run_server(addr, load_balancer.clone()));
 
         // HACK: make sure the server is running before we start testing
         sleep(std::time::Duration::from_millis(200)).await;
@@ -96,6 +98,8 @@ impl TestAppBuilder {
             workers: self.workers,
             address,
             http_client,
+            metrics_client,
+            load_balancer,
         }
     }
 }

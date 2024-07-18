@@ -8,7 +8,7 @@ use wiremock::{
 use crate::helpers::TestApp;
 
 #[tokio::test]
-async fn test_switching_strategies() {
+async fn test_switching_strategies_via_endpoint() {
     let app = Arc::new(
         TestApp::new(3)
             .await

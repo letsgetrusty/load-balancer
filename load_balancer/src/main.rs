@@ -1,5 +1,5 @@
 use load_balancer::{run_server, DecisionEngine, LoadBalancer, MetricsClient, RoundRobinStrategy};
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 
 #[tokio::main]
@@ -16,7 +16,11 @@ async fn main() {
         metrics_client.clone(),
     )));
 
-    let decision_engine = DecisionEngine::new(Arc::clone(&load_balancer), metrics_client);
+    let decision_engine = DecisionEngine::new(
+        Arc::clone(&load_balancer),
+        metrics_client,
+        Some(Duration::from_secs(10)),
+    );
     decision_engine.start();
 
     let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], 1337));

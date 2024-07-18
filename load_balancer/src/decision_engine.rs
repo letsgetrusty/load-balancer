@@ -8,22 +8,26 @@ use tokio::time::{sleep, Duration};
 pub struct DecisionEngine {
     load_balancer: Arc<RwLock<LoadBalancer>>,
     metrics_client: Arc<MetricsClient>,
+    sleep_duration: Option<Duration>,
 }
 
 impl DecisionEngine {
     pub fn new(
         load_balancer: Arc<RwLock<LoadBalancer>>,
         metrics_client: Arc<MetricsClient>,
+        sleep_duration: Option<Duration>,
     ) -> Self {
         DecisionEngine {
             load_balancer,
             metrics_client,
+            sleep_duration,
         }
     }
 
     pub fn start(&self) {
         let load_balancer = Arc::clone(&self.load_balancer);
         let metrics_client = Arc::clone(&self.metrics_client);
+        let sleep_duration = self.sleep_duration;
 
         tokio::spawn(async move {
             loop {
@@ -37,7 +41,9 @@ impl DecisionEngine {
                     lb.set_strategy(strategy);
                 }
 
-                sleep(Duration::from_secs(10)).await;
+                if sleep_duration.is_some() {
+                    sleep(sleep_duration.unwrap()).await;
+                }
             }
         });
     }
