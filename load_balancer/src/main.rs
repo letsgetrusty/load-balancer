@@ -1,7 +1,6 @@
-use config::Config;
 use load_balancer::{run_server, DecisionEngine, LoadBalancer, MetricsClient, RoundRobinStrategy};
 use serde::Deserialize;
-use std::{net::SocketAddr, sync::Arc, time::Duration};
+use std::{env, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 
 #[derive(Debug, Deserialize)]
@@ -12,20 +11,12 @@ struct ConfigSettings {
 
 #[tokio::main]
 async fn main() {
-    let config = Config::builder()
-        // Add in `/config.json`
-        .add_source(config::File::with_name("config"))
-        // Add in settings from the environment (with a prefix of LB)
-        // Eg.. `LB_DEBUG=1 ./target/app` would set the `debug` key
-        .add_source(config::Environment::with_prefix("APP"))
-        .build()
-        .unwrap();
+    let worker_hosts: Vec<String> = {
+        let workers = env::var("LB_WORKER_HOSTS").expect("LB_WORKER_HOSTS must be set");
+        workers.split(',').map(String::from).collect()
+    };
 
-    let config_settings: ConfigSettings = config.try_deserialize().unwrap();
-
-    let strategy = Arc::new(RwLock::new(RoundRobinStrategy::new(
-        config_settings.worker_hosts.clone(),
-    )));
+    let strategy = Arc::new(RwLock::new(RoundRobinStrategy::new(worker_hosts)));
     let metrics_client = Arc::new(MetricsClient::new());
     let load_balancer = Arc::new(RwLock::new(LoadBalancer::new(
         strategy,

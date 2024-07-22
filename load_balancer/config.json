@@ -1,6 +1,0 @@
-{
-    "worker_hosts": [
-        "http://localhost:49961",
-        "http://localhost:49962"
-    ]
-}

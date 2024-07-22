@@ -10,7 +10,6 @@ hyper = { version = "0.14.25", features = ["full"] }
 tokio = { version = "1.26.0", features = ["full"] }
 tower = { version = "0.4", features = ["full"] }
 rand = "0.8.5"
-config = "0.14.0"
 serde = { version = "1.0.204", features = ["derive"] }
 
 [dev-dependencies]
