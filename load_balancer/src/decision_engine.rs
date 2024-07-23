@@ -31,19 +31,20 @@ impl DecisionEngine {
 
         tokio::spawn(async move {
             loop {
-                println!("Decision Engine: Checking metrics");
-                if metrics_client.get_metrics().await.total_requests > 5 {
-                    println!("Decision Engine: Changing strategy to FirstWorkerStrategy");
-                    let mut lb = load_balancer.write().await;
-                    let strategy = Arc::new(RwLock::new(FirstWorkerStrategy::new(
-                        lb.get_worker_hosts().await,
-                    )));
-                    lb.set_strategy(strategy);
-                }
+                // TODO: update
+                // println!("Decision Engine: Checking metrics");
+                // if metrics_client.get_metrics().await.total_requests > 5 {
+                //     println!("Decision Engine: Changing strategy to FirstWorkerStrategy");
+                //     let mut lb = load_balancer.write().await;
+                //     let strategy = Arc::new(RwLock::new(FirstWorkerStrategy::new(
+                //         lb.get_worker_hosts().await,
+                //     )));
+                //     lb.set_strategy(strategy);
+                // }
 
-                if sleep_duration.is_some() {
-                    sleep(sleep_duration.unwrap()).await;
-                }
+                // if sleep_duration.is_some() {
+                //     sleep(sleep_duration.unwrap()).await;
+                // }
             }
         });
     }
