@@ -91,6 +91,8 @@ async fn main() {
         .await
         .expect("failed to bind TCP listener");
 
+    println!("load balancer listening on http://{}", addr);
+
     loop {
         let (stream, _) = listener.accept().await.expect("failed to accept");
         let load_balancer = load_balancer.clone();
